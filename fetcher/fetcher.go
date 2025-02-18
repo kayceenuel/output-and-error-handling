@@ -2,6 +2,7 @@ package fetcher
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 )
@@ -22,6 +23,13 @@ func FetchWeather(url string) (string, error) {
 
 		switch resp.StatusCode {
 		case http.StatusOK:
+			// Successful response
+			body, err := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			if err != nil {
+				return "", fmt.Errorf("failed to read response body: %w", err)
+			}
+			return string(body), nil
 		}
 	}
 }
