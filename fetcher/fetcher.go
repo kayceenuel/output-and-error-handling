@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -41,7 +42,7 @@ func FetchWeather(url string) (string, error) {
 			waitDuration, err := parseRetryAfter(retryAfter) // custom functionn
 			if err != nil {
 				// if parsing fails, default to 1 second
-				fmt.Fprintln(os.stderr, "Retry-After header Invaild, waiting 1 second")
+				fmt.Fprintln(os.Stderr, "Retry-After header Invaild, waiting 1 second")
 				waitDuration = 1 * time.Second
 			}
 
@@ -65,4 +66,13 @@ func FetchWeather(url string) (string, error) {
 			return "", fmt.Errorf("unexpected server response: %s", resp.Status)
 		}
 	}
+}
+
+// parserRetryAfter parses the Retry-After header value and returns the duration to wait.
+func parseRetryAfter(header string) (time.Duration, error) {
+	seconds, err := strconv.Atoi(header)
+	if err != nil {
+		return 0, err
+	}
+	return time.Duration(seconds) * time.Second, nil
 }
