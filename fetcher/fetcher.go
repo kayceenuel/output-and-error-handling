@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -44,6 +45,24 @@ func FetchWeather(url string) (string, error) {
 				waitDuration = 1 * time.Second
 			}
 
+			// If the wait time is more than 5 seconds, give up.
+			if waitDuration > 5*time.Second {
+				return "", fmt.Errorf("retry delay too long (%v); giving up", waitDuration)
+			}
+
+			// Inform the user if the wait time is more than 1 secondd
+			if waitDuration > 1*time.Second {
+				fmt.Fprintf(os.Stderr, "Server busy. Waiting %v before retrying.../n", waitDuration)
+			}
+
+			// Wait for specified duration before retrying.
+			time.Sleep(waitDuration)
+			continue
+
+		default:
+			// for any unexpected http statuscodes, return an error
+			resp.Body.Close()
+			return "", fmt.Errorf("unexpected server response: %s", resp.Status)
 		}
 	}
 }
