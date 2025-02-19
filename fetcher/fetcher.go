@@ -30,6 +30,20 @@ func FetchWeather(url string) (string, error) {
 				return "", fmt.Errorf("failed to read response body: %w", err)
 			}
 			return string(body), nil
+
+		case http.StatusTooManyRequests:
+			// Hanlde 429 response by reading the Retry-After header
+			retryAfter := resp.Header.Get("Retry-After")
+			resp.Body.Close() // won't be using the body
+
+			// Parse the Retry-After header
+			waitDuration, err := parseRetryAfter(retryAfter) // custom functionn
+			if err != nil {
+				// if parsing fails, default to 1 second
+				fmt.Fprintln(os.stderr, "Retry-After header Invaild, waiting 1 second")
+				waitDuration = 1 * time.Second
+			}
+
 		}
 	}
 }
