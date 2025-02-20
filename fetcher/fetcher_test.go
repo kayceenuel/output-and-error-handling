@@ -26,15 +26,27 @@ func TestFetchWeatherOK(t *testing.T) {
 
 // TestFetchWeatherTooManyRequests tests the retry mechanism when a 429 response is received.
 
-func TestFetchWeatherTooManyRequest(t *testing.T) {
+func TestFetchWeatherTooManyRequests(t *testing.T) {
 	attempt := 0
-	ts := http.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		attempt++
 		if attempt == 1 {
-			// first attempt returns 429 with a RetryAfter header set to 1 second
+			// First attempt returns 429 with a Retry-After header set to 1 second
 			w.Header().Set("Retry-After", "1")
-			w.WriterHeader(http.StatusTooManyRequests)
+			w.WriteHeader(http.StatusTooManyRequests)
 			return
 		}
+		// Second attempt returns 200 OK
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Cloudy"))
 	}))
+	defer ts.Close()
+
+	result, err := FetchWeather(ts.URL)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result != "Cloudy" {
+		t.Errorf("expected %q, got %q", "Cloudy", result)
+	}
 }
