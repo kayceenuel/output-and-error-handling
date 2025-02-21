@@ -50,3 +50,18 @@ func TestFetchWeatherTooManyRequests(t *testing.T) {
 		t.Errorf("expected %q, got %q", "Cloudy", result)
 	}
 }
+
+// TooManyRequest LongDelay test the case where the server returns a Retry-After header with a delay longer than 5 seconds.
+func TestFetchWeatherTooManyRequestsLongDelay(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Return 429 with a long delay (10 seconds) which should cause an error
+		w.Header().Set("Retry-After", "10")
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer ts.Close()
+
+	_, err := FetchWeather(ts.URL)
+	if err == nil {
+		t.Fatal("expected an error due to long retry delay, got none")
+	}
+}
