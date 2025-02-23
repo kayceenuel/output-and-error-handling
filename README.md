@@ -1,6 +1,6 @@
 # Output and Error Handling in Go
 
-This project demonstrates error handling and output management in Go by building a client that interacts with a provided weather server. The client fetches weather data from the server, handles errors, and outputs messages to standard output (stdout) and standard error (stderr).
+Error handling and output management in Go can be done by building a client interacting with a weather server. The client fetches weather data from the server, handles errors, and outputs messages to standard output (stdout) and standard error (stderr).
 
 ## Overview
 
